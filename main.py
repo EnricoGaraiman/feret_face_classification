@@ -1,19 +1,37 @@
-import torch
+import src.dataset as dataset_file
 
+"""
+   PARAMETERS
+"""
+DATASET = {
+    'name': 'COLOR FERET FACE RECOGNITION',
+    'images_dir': 'data/colorferet/converted_images/images',
+    'ground_truths_dir': 'data/colorferet/converted_images/ground_truths',
+    'test_files': {
+        'data/colorferet/converted_images/partitions/dup1.txt',
+        'data/colorferet/converted_images/partitions/dup2.txt',
+        'data/colorferet/converted_images/partitions/fa.txt',
+        'data/colorferet/converted_images/partitions/fb.txt',
+    },
+    'mtcnn_detect': True,
+    'size': [160, 160],
+    'data_loader': {
+        'batch_size': 4,
+        'num_workers': 4,
+        'shuffle': True
+    }
+}
 
+"""
+   MAIN FUNCTION
+"""
 if __name__ == '__main__':
-    # setting device on GPU if available, else CPU
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print('Using device:', device)
-    print(torch.cuda.is_available())
-    print(torch.cuda.device_count())
-    print(torch.cuda.current_device())
-    print(torch.cuda.device(0))
-    print(torch.cuda.get_device_name(0))
+    # dataset visualisation todo
 
-    # Additional Info when using cuda
-    if device.type == 'cuda':
-        print(torch.cuda.get_device_name(0))
-        print('Memory Usage:')
-        print('Allocated:', round(torch.cuda.memory_allocated(0) / 1024 ** 3, 1), 'GB')
-        print('Cached:   ', round(torch.cuda.memory_reserved(0) / 1024 ** 3, 1), 'GB')
+    # dataset
+    train_images_name, test_images_name = dataset_file.get_dataset_images_name(DATASET)
+    dataset_train, dataset_test = dataset_file.get_dataset(DATASET, train_images_name, test_images_name)
+
+    # dataset loaders
+    dataset_train_loader = dataset_file.get_dataset_loader(dataset_train, DATASET)
+    dataset_test_loader = dataset_file.get_dataset_loader(dataset_test, DATASET)

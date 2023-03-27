@@ -7,6 +7,7 @@ import numpy as np
 from torchvision import transforms
 import xmltodict
 import collections
+import src.utils as utils
 
 
 def get_dataset(DATASET, train_images_name, test_images_name):
@@ -132,9 +133,11 @@ def plot_dataset_visualisation(DATASET):
     :param DATASET: DATASET
     """
     subjects_info = get_subjects_information(DATASET)
+    recordings_info = get_recordings_info(DATASET)
 
-    # dataset_distribution(DATASET)
-    dataset_others_distribution(DATASET, subjects_info)
+    dataset_distribution(DATASET)
+    dataset_others_distribution(DATASET, subjects_info, recordings_info)
+
 
 def get_subjects_information(DATASET):
     """
@@ -147,6 +150,20 @@ def get_subjects_information(DATASET):
         xml_subjects = file.read()
 
     return xmltodict.parse(xml_subjects)
+
+
+def get_recordings_info(DATASET):
+    """
+    Get subjects information from XML file converted to dictionary
+
+    :param DATASET: DATASET
+    :return: subjects information dict
+    """
+    with open(DATASET['recordings_info'], 'r', encoding='utf-8') as file:
+        xml_recordings_info = file.read()
+
+    return xmltodict.parse(xml_recordings_info)
+
 
 def dataset_distribution(DATASET):
     """
@@ -190,87 +207,207 @@ def dataset_distribution(DATASET):
     print('Max:', dataset_classes[np.argmax(dataset_distr)], dataset_distr[np.argmax(dataset_distr)])
 
 
-def dataset_others_distribution(DATASET, subjects_info):
+def dataset_others_distribution(DATASET, subjects_info, recordings_info):
     """
     Plot dataset classes distribution by gender
 
     :param DATASET: DATASET
     :param subjects_info: subjects information
+    :param recordings_info: subjects recordings information
     """
 
     info = {
         'gender': [],
         'race': [],
         'YOB': [],
+        'glasses': [],
+        'beard': [],
+        'mustache': [],
+        'pose': [],
     }
     for subject_info in subjects_info['Subjects']['Subject']:
         info['gender'].append(subject_info['Gender']['@value'])
         info['race'].append(subject_info['Race']['@value'])
         info['YOB'].append(subject_info['YOB']['@value'])
 
+    for subject_info_recordings in recordings_info['Recordings']['Recording']:
+        info['glasses'].append(subject_info_recordings['Subject']['Application']['Face']['Wearing']['@glasses'])
+        info['beard'].append(subject_info_recordings['Subject']['Application']['Face']['Hair']['@beard'])
+        info['mustache'].append(subject_info_recordings['Subject']['Application']['Face']['Hair']['@mustache'])
+        info['pose'].append(subject_info_recordings['Subject']['Application']['Face']['Pose']['@name'])
+
     # gender
     counter = collections.Counter(info['gender'])
     distr = []
     data = []
-    for key, count in counter.items():
+
+    for key, count in sorted(counter.items()):
         data.append(key)
         distr.append(count)
 
+    distr = distr / np.sum(distr) * 100
+
     fig = plt.figure(figsize=(10, 10), dpi=900)
-    plt.bar(data, distr, color='darkgreen', width=0.2)
+    plt.bar(data, distr, color='darkgreen', width=0.5)
     plt.xlabel("Gender", fontsize=14)
-    plt.ylabel("No. of subjects", fontsize=14)
+    plt.ylabel("Subjects percent [%]", fontsize=14)
     plt.title('Dataset gender distribution' + ' | ' + DATASET['name'], fontsize=20)
     ax = plt.gca()
     ax.tick_params(axis='both', labelsize=14)
     plt.tight_layout()
+    utils.add_labels(data, distr)
     plt.savefig('data/results/dataset_gender_distribution.jpg', dpi=fig.dpi)
 
     # race
     counter = collections.Counter(info['race'])
     distr = []
     data = []
-    for key, count in counter.items():
+    for key, count in sorted(counter.items()):
         data.append(key)
         distr.append(count)
+
+    distr = distr / np.sum(distr) * 100
 
     fig = plt.figure(figsize=(10, 10), dpi=900)
     plt.bar(data, distr, color='darkorange', width=0.5)
     plt.xlabel("Race", fontsize=14)
-    plt.ylabel("No. of subjects", fontsize=14)
+    plt.ylabel("Subjects percent [%]", fontsize=14)
     plt.title('Dataset race distribution' + ' | ' + DATASET['name'], fontsize=20)
     ax = plt.gca()
     ax.set_xticks(data)
     ax.set_xticklabels(data, rotation=45, ha='right', rotation_mode='anchor')
     ax.tick_params(axis='y', labelsize=14)
     plt.tight_layout()
+    utils.add_labels(data, distr)
     plt.savefig('data/results/dataset_race_distribution.jpg', dpi=fig.dpi)
 
     # YOB
     counter = collections.Counter(info['YOB'])
     distr = []
     data = []
-    for key, count in counter.items():
+    for key, count in sorted(counter.items()):
         data.append(key)
         distr.append(count)
+
+    distr = distr / np.sum(distr) * 100
 
     fig = plt.figure(figsize=(10, 10), dpi=900)
     plt.bar(data, distr, color='dodgerblue', width=0.5)
     plt.xlabel("Year of born", fontsize=14)
-    plt.ylabel("No. of subjects", fontsize=14)
+    plt.ylabel("Subjects percent [%]", fontsize=14)
     plt.title('Dataset YOB distribution' + ' | ' + DATASET['name'], fontsize=20)
     ax = plt.gca()
     ax.set_xticks(data)
     ax.set_xticklabels(data, rotation=45, ha='right', rotation_mode='anchor')
     ax.tick_params(axis='y', labelsize=14)
     plt.tight_layout()
+    utils.add_labels(data, distr)
     plt.savefig('data/results/dataset_yob_distribution.jpg', dpi=fig.dpi)
 
-    # todo
     # mustache
+    counter = collections.Counter(info['mustache'])
+    distr = []
+    data = []
+    for key, count in sorted(counter.items()):
+        data.append(key)
+        distr.append(count)
+
+    distr = distr / np.sum(distr) * 100
+
+    fig = plt.figure(figsize=(10, 10), dpi=900)
+    plt.bar(data, distr, color='brown', width=0.5)
+    plt.xlabel("Mustache", fontsize=14)
+    plt.ylabel("Images percent [%]", fontsize=14)
+    plt.title('Dataset mustache distribution' + ' | ' + DATASET['name'], fontsize=20)
+    ax = plt.gca()
+    ax.set_xticks(data)
+    ax.tick_params(axis='both', labelsize=14)
+    plt.tight_layout()
+    utils.add_labels(data, distr)
+    plt.savefig('data/results/dataset_mustache_distribution.jpg', dpi=fig.dpi)
 
     # glasses
+    counter = collections.Counter(info['glasses'])
+    distr = []
+    data = []
+    for key, count in sorted(counter.items()):
+        data.append(key)
+        distr.append(count)
+
+    distr = distr / np.sum(distr) * 100
+
+    fig = plt.figure(figsize=(10, 10), dpi=900)
+    plt.bar(data, distr, color='royalblue', width=0.5)
+    plt.xlabel("Glasses", fontsize=14)
+    plt.ylabel("Images percent [%]", fontsize=14)
+    plt.title('Dataset glasses distribution' + ' | ' + DATASET['name'], fontsize=20)
+    ax = plt.gca()
+    ax.set_xticks(data)
+    ax.tick_params(axis='both', labelsize=14)
+    plt.tight_layout()
+    utils.add_labels(data, distr)
+    plt.savefig('data/results/dataset_glasses_distribution.jpg', dpi=fig.dpi)
 
     # beard
+    counter = collections.Counter(info['beard'])
+    distr = []
+    data = []
+    for key, count in sorted(counter.items()):
+        data.append(key)
+        distr.append(count)
+
+    distr = distr / np.sum(distr) * 100
+
+    fig = plt.figure(figsize=(10, 10), dpi=900)
+    plt.bar(data, distr, color='indianred', width=0.5)
+    plt.xlabel("Beard", fontsize=14)
+    plt.ylabel("Images percent [%]", fontsize=14)
+    plt.title('Dataset beard distribution' + ' | ' + DATASET['name'], fontsize=20)
+    ax = plt.gca()
+    ax.set_xticks(data)
+    ax.tick_params(axis='both', labelsize=14)
+    plt.tight_layout()
+    utils.add_labels(data, distr)
+    plt.savefig('data/results/dataset_beard_distribution.jpg', dpi=fig.dpi)
 
     # pose
+    counter = collections.Counter(info['pose'])
+    distr = []
+    data = []
+    for key, count in sorted(counter.items()):
+        if key == 'fb':  # fa & fb same 0 grades
+            distr[0] = distr[0] + count
+        else:
+            data.append(key)
+            distr.append(count)
+
+    data_labels = {
+        'fa': '0°',
+        'fb': '0°',
+        'hl': '+67.5°',
+        'hr': '-67.5°',
+        'pl': '+90°',
+        'pr': '-90°',
+        'ql': '+22.5°',
+        'qr': '-22.5°',
+        'ra': '+45°',
+        'rb': '+15°',
+        'rc': '-15°',
+        'rd': '-45°',
+        're': '-75°',
+    }
+
+    data = [data_labels[d] for d in data]
+    distr = distr / np.sum(distr) * 100
+
+    fig = plt.figure(figsize=(10, 10), dpi=900)
+    plt.bar(data, distr, color='darkviolet', width=0.5)
+    plt.xlabel("Poses", fontsize=14)
+    plt.ylabel("Images percent [%]", fontsize=14)
+    plt.title('Dataset poses distribution' + ' | ' + DATASET['name'], fontsize=20)
+    ax = plt.gca()
+    ax.set_xticks(data)
+    ax.tick_params(axis='both', labelsize=14)
+    plt.tight_layout()
+    utils.add_labels(data, distr)
+    plt.savefig('data/results/dataset_poses_distribution.jpg', dpi=fig.dpi)

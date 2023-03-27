@@ -2,6 +2,8 @@ import os
 import glob
 import bz2, shutil
 from PIL import Image
+import matplotlib.pyplot as plt
+
 
 def decompress_bz2_dataset():
     # this path must exist
@@ -27,6 +29,7 @@ def decompress_bz2_dataset():
             with bz2.BZ2File(existing_file_path) as fr, open(new_file_path[:-4], "wb") as fw:
                 shutil.copyfileobj(fr, fw)
 
+
 def convert_to_jpg_dataset():
     src = 'data/colorferet/converted_images/images'
     dst = 'data/colorferet/converted_images/images'
@@ -40,3 +43,8 @@ def convert_to_jpg_dataset():
                 im.save(outputfile)
 
                 os.remove(inputfile)
+
+
+def add_labels(x, y):
+    for i in range(len(x)):
+        plt.text(i, y[i] + 0.2, "{:.2f}".format(y[i]) + ' %', ha='center')

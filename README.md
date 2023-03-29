@@ -1,2 +1,2 @@
-# FERET emotion lassification
-Emotion classification from the FERET dataset using the ResNet neural network.
+# FERET face lassification
+Face classification from the FERET dataset using the ResNet neural network.

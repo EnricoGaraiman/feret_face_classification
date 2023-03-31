@@ -1,3 +1,4 @@
+import torch
 from torch.utils.data import DataLoader
 from src.custom.CustomFeretDataset import CustomFeretDataset
 import random
@@ -10,56 +11,64 @@ import collections
 import src.utils as utils
 
 
-def get_dataset(DATASET, train_images_name, test_images_name):
+def get_dataset(DATASET, train_images_name, test_images_name, classes):
     """
     Get dataset using a custom dataset
 
     :param DATASET: dataset name
     :param train_images_name: dataset train images name
     :param test_images_name: dataset test images name
-    :return: dataset object
+    :param classes: as string IDs
+    :return: dataset objects
     """
     dataset_train = CustomFeretDataset(
         DATASET['images_dir'],
         images_names=train_images_name,
+        classes=classes,
         mtcnn_detect=DATASET['mtcnn_detect'],
         transform=transforms.Compose({
             transforms.Resize(DATASET['size']),
+            transforms.ToTensor(),
+            # transforms.Normalize(mean=DATASET['dataset_train_mean'], std=DATASET['dataset_train_std']),
         })
     )
 
     dataset_test = CustomFeretDataset(
         DATASET['images_dir'],
         images_names=test_images_name,
+        classes=classes,
         mtcnn_detect=DATASET['mtcnn_detect'],
         transform=transforms.Compose({
             transforms.Resize(DATASET['size']),
+            transforms.ToTensor(),
+            # transforms.Normalize(mean=DATASET['dataset_train_mean'], std=DATASET['dataset_train_std']),
         })
     )
 
-    iterate_dataset(dataset_train)
-    iterate_dataset(dataset_test)
+    # iterate_dataset(dataset_train)
+    # iterate_dataset(dataset_test)
 
     return dataset_train, dataset_test
 
 
-def get_dataset_loader(dataset, DATASET):
+def get_dataset_loader(dataset, DATASET, type_dataset):
     """
     Get dataset loader
 
     :param dataset: dataset
     :param DATASET: info
+    :param type_dataset: dataset loader type
     :return: dataset loader object
     """
 
     dataset_loader = DataLoader(
         dataset,
-        batch_size=DATASET['data_loader']['batch_size'],
-        shuffle=DATASET['data_loader']['shuffle'],
-        num_workers=DATASET['data_loader']['num_workers']
+        batch_size=DATASET['data_loader_train' if type_dataset == 0 else 'data_loader_test']['batch_size'],
+        shuffle=DATASET['data_loader_train' if type_dataset == 0 else 'data_loader_test']['shuffle'],
+        num_workers=DATASET['data_loader_train' if type_dataset == 0 else 'data_loader_test']['num_workers']
     )
 
-    check_dataset_loader(dataset_loader)
+    # check_dataset_loader(dataset_loader)
 
     return dataset_loader
 
@@ -74,7 +83,7 @@ def iterate_dataset(dataset):
         sample, label = dataset[i]
 
         plt.figure()
-        plt.imshow(sample)
+        plt.imshow(sample.permute(1, 2, 0))
         plt.title('Subject: ' + label)
         plt.show()
 
@@ -90,40 +99,86 @@ def check_dataset_loader(dataset_loader):
         frames, labels = next(iter(dataset_loader))
         print(f"Feature batch shape: {frames.size()}")
         print(f"Labels batch shape: {np.shape(labels)}")
-        img = frames[0].squeeze()
+        img = frames[0].squeeze().permute(1, 2, 0)
         label = labels[0]
+        print(img.min(), img.max())
         plt.imshow(img, cmap="gray")
-        plt.title('Subject' + label)
+        plt.title('Subject: ' + label)
+        plt.colorbar()
         plt.show()
 
 
-def get_dataset_images_name(DATASET, split=True):
+def get_dataset_images_name(DATASET):
     """
     Get all images name for dataset train & test
 
     :param DATASET: DATASET
-    :param split: split
-    :return: dataset images names
+    :return: dataset images names & classes
     """
 
-    paths = glob.glob(DATASET['images_dir'] + '/*/*.jpg')
-
-    names = [path.split('\\')[-1].replace('.jpg', '') for path in paths]
-
-    if not split:
-        return names
-
+    train_images_name = []
     test_images_name = []
-    for test_file in DATASET['test_files']:
-        file = open(test_file, 'r')
-        for line in file.readlines():
-            test_images_name.append(line.split()[1].replace('.ppm', ''))
-        file.close()
 
-    test_images_name = set(test_images_name)
-    train_images_name = set(names) - test_images_name
+    dirs = glob.glob(DATASET['images_dir'] + '/*')
+    if DATASET['subjects_percent']:
+        dirs = dirs[0: int(DATASET['subjects_percent'] * len(dirs))]
+        print('Subjects: ', len(dirs))
 
-    return train_images_name, test_images_name
+    for dir in dirs:
+        names_files = glob.glob(dir + '/*.jpg')
+
+        sub = 0
+        if len(names_files) < 7:
+            sub = 1
+
+        indexes = random.sample(range(0, len(names_files)), int(len(names_files) * DATASET['split_factor'] - sub))
+        train_images_name.extend([name.split('\\')[-1].replace('.jpg', '') for i, name in enumerate(names_files) if i in indexes])
+        test_images_name.extend([name.split('\\')[-1].replace('.jpg', '') for i, name in enumerate(names_files) if i not in indexes])
+
+    paths = glob.glob(DATASET['images_dir'] + '/*/*.jpg')
+    names = [path.split('\\')[-1].replace('.jpg', '') for path in paths]
+    classes = sorted(list(set([cls.split('_')[0] for cls in names])))
+
+    if DATASET['subjects_percent']:
+        classes = classes[0: int(DATASET['subjects_percent'] * len(classes))]
+
+    return train_images_name, test_images_name, classes
+
+
+def dataset_mean_and_std(train_loader):
+    """
+    Calculate mean and standard deviation of dataset
+
+    :param train_loader: training loader
+    :return: mean & std
+    """
+    cnt = 0
+    fst_moment = torch.empty(3)
+    snd_moment = torch.empty(3)
+
+    print('Train batches', len(train_loader))
+    i = 0
+    for images, _ in train_loader:
+        if i % 100 == 0:
+            print('Mean & std batch', i)
+
+        b, c, h, w = images.shape
+
+        nb_pixels = b * h * w
+        sum_ = torch.sum(images, dim=[0, 2, 3])
+        sum_of_square = torch.sum(images ** 2,
+                                  dim=[0, 2, 3])
+        fst_moment = (cnt * fst_moment + sum_) / (
+                cnt + nb_pixels)
+        snd_moment = (cnt * snd_moment + sum_of_square) / (
+                cnt + nb_pixels)
+        cnt += nb_pixels
+
+        i += 1
+
+    mean, std = fst_moment, torch.sqrt(
+        snd_moment - fst_moment ** 2)
+    return mean, std
 
 
 def plot_dataset_visualisation(DATASET):

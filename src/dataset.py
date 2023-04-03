@@ -10,6 +10,8 @@ import xmltodict
 import collections
 import src.utils as utils
 
+random.seed(777)
+
 
 def get_dataset(DATASET, train_images_name, test_images_name, classes):
     """
@@ -25,10 +27,9 @@ def get_dataset(DATASET, train_images_name, test_images_name, classes):
         DATASET['images_dir'],
         images_names=train_images_name,
         classes=classes,
-        mtcnn_detect=DATASET['mtcnn_detect'],
         transform=transforms.Compose({
             transforms.Resize(DATASET['size']),
-            transforms.ToTensor(),
+            # transforms.ToTensor(),
             # transforms.Normalize(mean=DATASET['dataset_train_mean'], std=DATASET['dataset_train_std']),
         })
     )
@@ -37,10 +38,9 @@ def get_dataset(DATASET, train_images_name, test_images_name, classes):
         DATASET['images_dir'],
         images_names=test_images_name,
         classes=classes,
-        mtcnn_detect=DATASET['mtcnn_detect'],
         transform=transforms.Compose({
             transforms.Resize(DATASET['size']),
-            transforms.ToTensor(),
+            # transforms.ToTensor(),
             # transforms.Normalize(mean=DATASET['dataset_train_mean'], std=DATASET['dataset_train_std']),
         })
     )
@@ -132,8 +132,10 @@ def get_dataset_images_name(DATASET):
             sub = 1
 
         indexes = random.sample(range(0, len(names_files)), int(len(names_files) * DATASET['split_factor'] - sub))
-        train_images_name.extend([name.split('\\')[-1].replace('.jpg', '') for i, name in enumerate(names_files) if i in indexes])
-        test_images_name.extend([name.split('\\')[-1].replace('.jpg', '') for i, name in enumerate(names_files) if i not in indexes])
+        train_images_name.extend(
+            [name.split('\\')[-1].replace('.jpg', '') for i, name in enumerate(names_files) if i in indexes])
+        test_images_name.extend(
+            [name.split('\\')[-1].replace('.jpg', '') for i, name in enumerate(names_files) if i not in indexes])
 
     paths = glob.glob(DATASET['images_dir'] + '/*/*.jpg')
     names = [path.split('\\')[-1].replace('.jpg', '') for path in paths]
@@ -181,17 +183,21 @@ def dataset_mean_and_std(train_loader):
     return mean, std
 
 
-def plot_dataset_visualisation(DATASET):
+def plot_dataset_visualisation(DATASET, dataset_train_loader, dataset_test_loader, classes):
     """
     Plot all info for dataset
 
     :param DATASET: DATASET
+    :param dataset_train_loader: dataset_train_loader
+    :param dataset_test_loader: dataset_test_loader
+    :param classes: classes
     """
     subjects_info = get_subjects_information(DATASET)
     recordings_info = get_recordings_info(DATASET)
 
     dataset_distribution(DATASET)
     dataset_others_distribution(DATASET, subjects_info, recordings_info)
+    dataset_type_examples(dataset_train_loader, dataset_test_loader, classes)
 
 
 def get_subjects_information(DATASET):
@@ -255,11 +261,54 @@ def dataset_distribution(DATASET):
     ax.set_xticks(x_ticks)
     ax.set_xticklabels(x_labels, rotation=30, fontsize=8, horizontalalignment='right')
     plt.tight_layout()
-    plt.savefig('data/results/dataset_distribution.jpg', dpi=fig.dpi)
+    plt.savefig('data/results/dataset/dataset_distribution.jpg', dpi=fig.dpi)
     # plt.show()
 
     print('Min:', dataset_classes[np.argmin(dataset_distr)], dataset_distr[np.argmin(dataset_distr)])
     print('Max:', dataset_classes[np.argmax(dataset_distr)], dataset_distr[np.argmax(dataset_distr)])
+
+
+def dataset_type_examples(dataset_train_loader, dataset_test_loader, classes):
+    """
+    Example each class by dataset
+
+    :param dataset_train_loader: dataset_train_loader
+    :param dataset_test_loader: dataset_test_loader
+    :param classes: classes
+    """
+    fig, ax = plt.subplots(nrows=10, ncols=10, figsize=(15, 15), dpi=900)
+    ax = ax.flatten()
+
+    already = []
+    index = 0
+    for images, labels in dataset_train_loader:
+        if labels.numpy()[0] not in already:
+            ax[index].imshow(images[0].permute(1, 2, 0), cmap='gray')
+            ax[index].set_title(classes[labels.numpy()[0]])
+            ax[index].axis('off')
+            already.append(labels.numpy()[0])
+            index += 1
+        if index == 100:
+            break
+    plt.tight_layout()
+    fig.savefig('data/results/dataset/training_data_visualisation.jpg', dpi=fig.dpi)
+
+    fig, ax = plt.subplots(nrows=10, ncols=10, figsize=(15, 15), dpi=900)
+    ax = ax.flatten()
+
+    already = []
+    index = 0
+    for images, labels in dataset_test_loader:
+        if labels.numpy()[0] not in already:
+            ax[index].imshow(images[0].permute(1, 2, 0), cmap='gray')
+            ax[index].set_title(classes[labels.numpy()[0]])
+            ax[index].axis('off')
+            already.append(labels.numpy()[0])
+            index += 1
+        if index == 100:
+            break
+    plt.tight_layout()
+    fig.savefig('data/results/dataset/testing_data_visualisation.jpg', dpi=fig.dpi)
 
 
 def dataset_others_distribution(DATASET, subjects_info, recordings_info):
@@ -311,7 +360,7 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
     ax.tick_params(axis='both', labelsize=14)
     plt.tight_layout()
     utils.add_labels(data, distr)
-    plt.savefig('data/results/dataset_gender_distribution.jpg', dpi=fig.dpi)
+    plt.savefig('data/results/dataset/dataset_gender_distribution.jpg', dpi=fig.dpi)
 
     # race
     counter = collections.Counter(info['race'])
@@ -334,7 +383,7 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
     ax.tick_params(axis='y', labelsize=14)
     plt.tight_layout()
     utils.add_labels(data, distr)
-    plt.savefig('data/results/dataset_race_distribution.jpg', dpi=fig.dpi)
+    plt.savefig('data/results/dataset/dataset_race_distribution.jpg', dpi=fig.dpi)
 
     # YOB
     counter = collections.Counter(info['YOB'])
@@ -357,7 +406,7 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
     ax.tick_params(axis='y', labelsize=14)
     plt.tight_layout()
     utils.add_labels(data, distr)
-    plt.savefig('data/results/dataset_yob_distribution.jpg', dpi=fig.dpi)
+    plt.savefig('data/results/dataset/dataset_yob_distribution.jpg', dpi=fig.dpi)
 
     # mustache
     counter = collections.Counter(info['mustache'])
@@ -379,7 +428,7 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
     ax.tick_params(axis='both', labelsize=14)
     plt.tight_layout()
     utils.add_labels(data, distr)
-    plt.savefig('data/results/dataset_mustache_distribution.jpg', dpi=fig.dpi)
+    plt.savefig('data/results/dataset/dataset_mustache_distribution.jpg', dpi=fig.dpi)
 
     # glasses
     counter = collections.Counter(info['glasses'])
@@ -401,7 +450,7 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
     ax.tick_params(axis='both', labelsize=14)
     plt.tight_layout()
     utils.add_labels(data, distr)
-    plt.savefig('data/results/dataset_glasses_distribution.jpg', dpi=fig.dpi)
+    plt.savefig('data/results/dataset/dataset_glasses_distribution.jpg', dpi=fig.dpi)
 
     # beard
     counter = collections.Counter(info['beard'])
@@ -423,7 +472,7 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
     ax.tick_params(axis='both', labelsize=14)
     plt.tight_layout()
     utils.add_labels(data, distr)
-    plt.savefig('data/results/dataset_beard_distribution.jpg', dpi=fig.dpi)
+    plt.savefig('data/results/dataset/dataset_beard_distribution.jpg', dpi=fig.dpi)
 
     # pose
     counter = collections.Counter(info['pose'])
@@ -465,4 +514,4 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
     ax.tick_params(axis='both', labelsize=14)
     plt.tight_layout()
     utils.add_labels(data, distr)
-    plt.savefig('data/results/dataset_poses_distribution.jpg', dpi=fig.dpi)
+    plt.savefig('data/results/dataset/dataset_poses_distribution.jpg', dpi=fig.dpi)

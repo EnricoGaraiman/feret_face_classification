@@ -12,8 +12,7 @@ DATASET = {
     'subjects_info': 'data/colorferet/converted_images/ground_truths/xml/subjects.xml',
     'recordings_info': 'data/colorferet/converted_images/ground_truths/xml/recordings.xml',
     'split_factor': 0.8,
-    'subjects_percent': 0.1, #0.015 94.9% pt 100 epoci
-    'mtcnn_detect': False,
+    'subjects_percent': None,  # 0.015 94.9% pt 100 epoci
     'size': [224, 224],
     'data_loader_train': {
         'batch_size': 10,
@@ -29,34 +28,44 @@ DATASET = {
     'epochs': 100,
     'learning_rate': 1e-3,
     'dataset_train_mean': [1.2244, 1.1298, 1.0203],  # calculate dataset_file.dataset_mean_and_std(dataset_train_loader)
-    'dataset_train_std': [11.2739, 11.1779, 10.6974],  # calculate dataset_file.dataset_mean_and_std(dataset_train_loader)
+    'dataset_train_std': [11.2739, 11.1779, 10.6974], # calculate dataset_file.dataset_mean_and_std(dataset_train_loader)
 }
 
 """
    MAIN FUNCTION
 """
 if __name__ == '__main__':
-    # dataset visualisation
-    # dataset_file.plot_dataset_visualisation(DATASET)
+    try:
+        # dataset
+        train_images_name, test_images_name, classes = dataset_file.get_dataset_images_name(DATASET)
+        print('Images: ', len(train_images_name) + len(train_images_name))
+        print('Train [%]', len(train_images_name), len(train_images_name) / (len(train_images_name) + len(test_images_name)) * 100)
+        print('Test [%]', len(test_images_name), len(test_images_name) / (len(train_images_name) + len(test_images_name)) * 100)
+        dataset_train, dataset_test = dataset_file.get_dataset(DATASET, train_images_name, test_images_name, classes)
 
-    # dataset
-    train_images_name, test_images_name, classes = dataset_file.get_dataset_images_name(DATASET)
-    print('Images: ', len(train_images_name) + len(train_images_name))
-    print('Train [%]', len(train_images_name), len(train_images_name) / (len(train_images_name) + len(test_images_name)) * 100)
-    print('Test [%]', len(test_images_name), len(test_images_name) / (len(train_images_name) + len(test_images_name)) * 100)
-    dataset_train, dataset_test = dataset_file.get_dataset(DATASET, train_images_name, test_images_name, classes)
+        # dataset loaders
+        dataset_train_loader = dataset_file.get_dataset_loader(dataset_train, DATASET, 0)
+        dataset_test_loader = dataset_file.get_dataset_loader(dataset_test, DATASET, 1)
 
-    # dataset loaders
-    dataset_train_loader = dataset_file.get_dataset_loader(dataset_train, DATASET, 0)
-    dataset_test_loader = dataset_file.get_dataset_loader(dataset_test, DATASET, 1)
+        # dataset visualisation
+        # dataset_file.plot_dataset_visualisation(DATASET, dataset_train_loader, dataset_test_loader, classes)
 
-    # dataset train mean & std
-    # mean, std = dataset_file.dataset_mean_and_std(dataset_train_loader)
-    # print(mean, std)
+        # dataset train mean & std
+        # mean, std = dataset_file.dataset_mean_and_std(dataset_train_loader)
+        # print(mean, std)
 
-    # training stage
-    # train_loss_history, train_acc_history, test_loss_history, test_acc_history = train_file.training_stage(DATASET, dataset_train_loader, dataset_test_loader)
+        # training stage
+        train_loss_history, train_acc_history, test_loss_history, test_acc_history = train_file.training_stage(DATASET, dataset_train_loader, dataset_test_loader)
 
-    # results
-    # results_file.plot_training_results(DATASET, train_loss_history, train_acc_history, test_loss_history, test_acc_history)
-    results_file.plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classes)
+        # results
+        results_file.plot_training_results(DATASET, train_loss_history, train_acc_history, test_loss_history, test_acc_history)
+        predictions, real_labels = results_file.plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classes)
+        results_file.plot_correct_wrong_predictions(DATASET, dataset_test_loader, predictions, real_labels, classes)
+
+    except OSError as err:
+        print("OS error:", err)
+    except ValueError as err:
+        print(err)
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise

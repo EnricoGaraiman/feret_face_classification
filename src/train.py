@@ -5,8 +5,15 @@ from tqdm.auto import tqdm
 
 
 def training_stage(DATASET, dataset_train_loader, dataset_test_loader):
+    """
+    Training stage
+
+    :param DATASET: dataset info
+    :param dataset_train_loader: train loader
+    :param dataset_test_loader: test loader
+    :return: acc & loss history
+    """
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    print(device)
 
     train_loss_history = []
     test_loss_history = []
@@ -20,16 +27,14 @@ def training_stage(DATASET, dataset_train_loader, dataset_test_loader):
     optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
 
     for epoch in range(1, DATASET['epochs']):
-        print(f'\n-------------------------------------------------\nEpoch: {epoch}\n-------------------------------------------------')
-        train_loss = train(model, dataset_train_loader, optimizer, loss_fn, device)
-        test_loss = test(model, dataset_test_loader, loss_fn, device)
+        print(
+            f'\n-------------------------------------------------\nEpoch {epoch}\n-------------------------------------------------')
 
-        #  deriving model accuracy on the training set
-        train_acc = accuracy(model, dataset_train_loader, device)
+        train_loss, train_acc = train(model, dataset_train_loader, optimizer, loss_fn, device)
+        test_loss, test_acc = test(model, dataset_test_loader, loss_fn, device)
 
-        #  deriving model accuracy on the validation set
-        test_acc = accuracy(model, dataset_test_loader, device)
-        print(f'Training accuracy: {train_acc} % | Training loss: {train_loss} ||| Testing accuracy: {test_acc} % | Testing loss: {test_loss}')
+        print(
+            f'Training accuracy: {train_acc} % | Training loss: {train_loss} ||| Testing accuracy: {test_acc} % | Testing loss: {test_loss}')
 
         if len(test_acc_history) > 0 and test_acc > np.max(test_acc_history):
             torch.save(model.state_dict(), 'runs/best.pth')
@@ -44,7 +49,18 @@ def training_stage(DATASET, dataset_train_loader, dataset_test_loader):
 
 
 def train(model, training_loader, optimizer, loss_function, device):
+    """
+    Train loop
+
+    :param model: network
+    :param training_loader: train loader
+    :param optimizer: optimizer
+    :param loss_function: loss function
+    :param device: device (cpu / gpu)
+    :return: acc & loss history
+    """
     total_loss = 0
+    avg_acc = []
 
     model.train()
 
@@ -57,6 +73,10 @@ def train(model, training_loader, optimizer, loss_function, device):
         #  classifying instances
         classifications = model(images)
 
+        #  get accuracy
+        correct_predictions = sum(torch.argmax(classifications, dim=1) == labels).item()
+        avg_acc.append(correct_predictions / len(images) * 100)
+
         #  computing loss
         loss = loss_function(classifications, labels)
         total_loss += loss.item()
@@ -67,11 +87,21 @@ def train(model, training_loader, optimizer, loss_function, device):
         #  optimizing weights
         optimizer.step()
 
-    return np.array(total_loss).mean()
+    return np.array(total_loss).mean(), round(np.array(avg_acc).mean(), 2)
 
 
 def test(model, testing_loader, loss_function, device):
+    """
+    Test loop
+
+    :param model: network
+    :param testing_loader: test loader
+    :param loss_function: loss function
+    :param device: device (cpu / gpu)
+    :return: acc & loss history
+    """
     total_loss = 0
+    avg_acc = []
 
     #  defining model state
     model.eval()
@@ -83,95 +113,12 @@ def test(model, testing_loader, loss_function, device):
             #  making classifications
             classifications = model(images)
 
+            #  get accuracy
+            correct_predictions = sum(torch.argmax(classifications, dim=1) == labels).item()
+            avg_acc.append(correct_predictions / len(images) * 100)
+
             #  computing loss
             loss = loss_function(classifications, labels)
             total_loss += loss.item()
 
-    return np.array(total_loss).mean()
-
-
-def accuracy(network, dataloader, device):
-    network.eval()
-
-    total_correct = 0
-    total_instances = 0
-
-    #  iterating through batches
-    with torch.no_grad():
-        for images, labels in tqdm(dataloader):
-            images, labels = images.to(device), labels.to(device)
-
-            #  making classifications
-            classifications = torch.argmax(network(images), dim=1)
-
-            #  comparing
-            correct_predictions = sum(classifications == labels).item()
-
-            #  incrementing counters
-            total_correct += correct_predictions
-            total_instances += len(images)
-
-    return round(total_correct / total_instances * 100, 2)
-
-# def train_loop(dataloader, model, loss_fn, optimizer, device):
-#     size = len(dataloader.dataset)
-#     train_loss, correct = 0, 0
-#
-#     for batch, (data, labels) in enumerate(dataloader):
-#         data = data.to(device)
-#         labels = labels.to(device)
-#
-#         # Clear the gradients
-#         optimizer.zero_grad()
-#         # Forward Pass
-#         target = model(data)
-#         # Find the Loss
-#         loss = loss_fn(target, labels)
-#         # Calculate gradients
-#         loss.backward()
-#         # Update Weights
-#         optimizer.step()
-#         # Calculate Loss
-#         train_loss += loss.item()
-#
-#         #
-#         #
-#         # # Compute prediction and loss
-#         # pred = model(X)
-#         # loss = loss_fn(pred, y)
-#         #
-#         # # get statistics
-#         correct += (target.argmax(1) == labe).type(torch.float).sum().item()
-#         #
-#         # # Backpropagation
-#         # optimizer.zero_grad()
-#         # loss.backward()
-#         # optimizer.step()
-#         #
-#
-#         # if batch % 100 == 0:
-#         #     loss, current = loss.item(), (batch + 1) * len(X)
-#         #     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-#
-#     return train_loss / len(dataloader), 100 * correct / size
-#
-#
-# def test_loop(dataloader, model, loss_fn, device):
-#     size = len(dataloader.dataset)
-#     num_batches = len(dataloader)
-#     test_loss, correct = 0, 0
-#
-#     with torch.no_grad():
-#         for X, y in dataloader:
-#             X = X.to(device)
-#             y = y.to(device)
-#
-#             pred = model(X)
-#             test_loss += loss_fn(pred, y).item()
-#             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
-#
-#     test_loss /= num_batches
-#     correct /= size
-#     print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
-#
-#     return test_loss, 100 * correct
+    return np.array(total_loss).mean(), round(np.array(avg_acc).mean(), 2)

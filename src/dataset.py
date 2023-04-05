@@ -84,7 +84,7 @@ def iterate_dataset(dataset):
 
         plt.figure()
         plt.imshow(sample.permute(1, 2, 0))
-        plt.title('Subject: ' + label)
+        plt.title('Subject: ' + str(label))
         plt.show()
 
 

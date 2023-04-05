@@ -12,8 +12,8 @@ DATASET = {
     'subjects_info': 'data/colorferet/converted_images/ground_truths/xml/subjects.xml',
     'recordings_info': 'data/colorferet/converted_images/ground_truths/xml/recordings.xml',
     'split_factor': 0.8,
-    'subjects_percent': None,  # 0.015 94.9% pt 100 epoci
-    'size': [224, 224],
+    'subjects_percent': None,
+    'size': [192, 128], # 768, 512 orig
     'data_loader_train': {
         'batch_size': 10,
         'num_workers': 0,
@@ -26,7 +26,7 @@ DATASET = {
     },
     'model': 'resnet18',
     'epochs': 100,
-    'learning_rate': 1e-3,
+    'learning_rate': 1e-4,
     'dataset_train_mean': [1.2244, 1.1298, 1.0203],  # calculate dataset_file.dataset_mean_and_std(dataset_train_loader)
     'dataset_train_std': [11.2739, 11.1779, 10.6974], # calculate dataset_file.dataset_mean_and_std(dataset_train_loader)
 }
@@ -55,11 +55,11 @@ if __name__ == '__main__':
         # print(mean, std)
 
         # training stage
-        train_loss_history, train_acc_history, test_loss_history, test_acc_history = train_file.training_stage(DATASET, dataset_train_loader, dataset_test_loader)
+        train_loss_history, train_acc_history, test_loss_history, test_acc_history, best_model = train_file.training_stage(DATASET, dataset_train_loader, dataset_test_loader)
 
         # results
         results_file.plot_training_results(DATASET, train_loss_history, train_acc_history, test_loss_history, test_acc_history)
-        predictions, real_labels = results_file.plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classes)
+        predictions, real_labels = results_file.plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classes, best_model)
         results_file.plot_correct_wrong_predictions(DATASET, dataset_test_loader, predictions, real_labels, classes)
 
     except OSError as err:

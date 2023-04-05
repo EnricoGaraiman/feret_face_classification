@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import torch
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from tqdm.auto import tqdm
+import time
 
 
 def plot_training_results(DATASET, train_loss_history, train_acc_history, test_loss_history, test_acc_history):
@@ -42,7 +43,7 @@ def plot_training_results(DATASET, train_loss_history, train_acc_history, test_l
     plt.savefig('data/results/training/accuracy_results_' + DATASET['model'] + '_' + str(DATASET['epochs']) + '.jpg')
 
 
-def plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classes):
+def plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classes, best_model):
     """
     Plot confusion matrix (full / partial)
 
@@ -50,17 +51,18 @@ def plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classe
     :param dataset_test_loader: dataset test loader
     :param test_images_name: names of images for test dataset
     :param classes: as string IDs
+    :param best_model: best_model
     :return: predictions & real labels
     """
     labels = [classes.index(label.split('_')[0]) for label in test_images_name]
 
     model = torch.hub.load('pytorch/vision:v0.10.0', DATASET['model'])
-    model.load_state_dict(torch.load('runs/best.pth'))
+    model.load_state_dict(torch.load(best_model))
     model.eval()
 
     test_accuracy, predictions, real_labels = get_test_predictions(dataset_test_loader, model)
 
-    print(f"Test dataset results: \n Accuracy: {test_accuracy :>0.1f}%\n")
+    print(f"Test dataset results: \n Accuracy: {test_accuracy :>0.2f}%\n")
 
     # # plot only a part of CM
     predictions_copy = predictions.copy()
@@ -96,6 +98,8 @@ def get_test_predictions(dataloader, model):
     real_labels = []
 
     with torch.no_grad():
+        start_time_testing = time.time()
+
         for images, labels in tqdm(dataloader):
             pred = torch.argmax(model(images), dim=1)
             correct_predictions = sum(pred == labels).item()
@@ -106,6 +110,9 @@ def get_test_predictions(dataloader, model):
 
             predictions.append(pred.numpy()[0])
             real_labels.append(labels.numpy()[0])
+        end_time_testing = time.time()
+
+    print(f'Inference time: {(end_time_testing - start_time_testing) / len(dataloader) * 1000} ms / image')
 
     return round(total_correct / total_instances * 100, 2), predictions, real_labels
 
@@ -158,4 +165,5 @@ def plot_correct_wrong_predictions(DATASET, dataset_test_loader, predictions, re
 
     plt.tight_layout()
     fig.savefig(
-        'data/results/training/test_wrong_predictions_visualisation_' + DATASET['model'] + '_' + str(DATASET['epochs']) + '.jpg')
+        'data/results/training/test_wrong_predictions_visualisation_' + DATASET['model'] + '_' + str(
+            DATASET['epochs']) + '.jpg')

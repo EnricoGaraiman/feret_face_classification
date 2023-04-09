@@ -27,10 +27,11 @@ def training_stage(DATASET, dataset_train_loader, dataset_test_loader):
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=DATASET['learning_rate'])
 
-    start_time_training = time.time()
     best_epoch = 0
     best_model = ''
-    for epoch in range(1, DATASET['epochs']):
+    count_last_best = 0
+    start_time_training = time.time()
+    for epoch in range(1, DATASET['epochs'] + 1):
         print(
             f'\n-------------------------------------------------\nEpoch {epoch}\n-------------------------------------------------')
 
@@ -44,6 +45,7 @@ def training_stage(DATASET, dataset_train_loader, dataset_test_loader):
             best_model = 'runs/best_' + str(epoch) + '.pth'
             best_epoch = epoch
             torch.save(model.state_dict(), 'runs/best_' + str(epoch) + '.pth')
+            count_last_best = 0
             print(f'Saved best model in epoch {epoch}')
 
         train_loss_history.append(train_loss)
@@ -56,6 +58,11 @@ def training_stage(DATASET, dataset_train_loader, dataset_test_loader):
             print(f'Best loss in epoch: {best_epoch}')
             print(f'Best loss: {np.min(test_loss_history)}')
             print(f'Best accuracy: {np.max(test_acc_history)} %\n')
+
+        if DATASET['early_stopping'] and DATASET['early_stopping_epochs_no_best'] < count_last_best:
+            break
+
+        count_last_best += 1
 
     end_time_training = time.time()
     print(f'Training total time: {end_time_training-start_time_training} seconds')

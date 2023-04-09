@@ -31,7 +31,8 @@ def get_dataset(DATASET, train_images_name, test_images_name, classes):
             transforms.Resize(DATASET['size']),
             # transforms.ToTensor(),
             # transforms.Normalize(mean=DATASET['dataset_train_mean'], std=DATASET['dataset_train_std']),
-        })
+        }),
+        use_cache=DATASET['use_cache']
     )
 
     dataset_test = CustomFeretDataset(
@@ -42,7 +43,8 @@ def get_dataset(DATASET, train_images_name, test_images_name, classes):
             transforms.Resize(DATASET['size']),
             # transforms.ToTensor(),
             # transforms.Normalize(mean=DATASET['dataset_train_mean'], std=DATASET['dataset_train_std']),
-        })
+        }),
+        use_cache=DATASET['use_cache']
     )
 
     # iterate_dataset(dataset_train)
@@ -128,7 +130,7 @@ def get_dataset_images_name(DATASET):
         names_files = glob.glob(dir + '/*.jpg')
 
         sub = 0
-        if len(names_files) < 7:
+        if len(names_files) < DATASET['split_factor_sub']:
             sub = 1
 
         indexes = random.sample(range(0, len(names_files)), int(len(names_files) * DATASET['split_factor'] - sub))

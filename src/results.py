@@ -1,11 +1,10 @@
 from collections import Counter
 import matplotlib.pyplot as plt
 import torch
-import torchvision
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from tqdm.auto import tqdm
 import time
-
+import src.train as train_file
 
 def plot_training_results(DATASET, train_loss_history, train_acc_history, test_loss_history, test_acc_history):
     """
@@ -57,13 +56,16 @@ def plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classe
     """
     labels = [classes.index(label.split('_')[0]) for label in test_images_name]
 
-    model = torch.hub.load('pytorch/vision:v0.10.0', DATASET['model'])
+    if DATASET['model'] != 'mlp':
+        model = torch.hub.load('pytorch/vision:v0.10.0', DATASET['model'])
+    else:
+        model = train_file.create_mlp_model(DATASET, len(classes))
     model.load_state_dict(torch.load(best_model))
     model.eval()
 
     dataset_test_loader.dataset.use_cache = False
 
-    test_accuracy, predictions, real_labels = get_test_predictions(dataset_test_loader, model)
+    test_accuracy, predictions, real_labels = get_test_predictions(dataset_test_loader, model, DATASET)
 
     print(f"Test dataset results: \n Accuracy: {test_accuracy :>0.2f}%\n")
 
@@ -88,12 +90,13 @@ def plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classe
     return predictions_copy, real_labels
 
 
-def get_test_predictions(dataloader, model):
+def get_test_predictions(dataloader, model, DATASET):
     """
     Get dataset using a custom dataset
 
     :param dataloader: dataloader
     :param model: network
+    :param DATASET: info
     :return: predictions for test dataset
     """
     total_correct, total_instances = 0, 0
@@ -103,8 +106,12 @@ def get_test_predictions(dataloader, model):
     with torch.no_grad():
         start_time_testing = time.time()
 
-        for images, labels in tqdm(dataloader):
-            pred = torch.argmax(model(images), dim=1)
+        for images, labels, features in tqdm(dataloader):
+            if DATASET['feature_extraction'] is not None:
+                pred = torch.argmax(model(features), dim=1)
+            else:
+                pred = torch.argmax(model(images), dim=1)
+
             correct_predictions = sum(pred == labels).item()
 
             #  incrementing counters
@@ -134,7 +141,7 @@ def plot_correct_wrong_predictions(DATASET, dataset_test_loader, predictions, re
     count = 0
     fig = plt.figure(figsize=(20, 20), dpi=900)
     index = 0
-    for img, label in dataset_test_loader:
+    for img, label, _ in dataset_test_loader:
         if (predictions[index] == real_labels[index]):
             plt.subplot(10, 6, count + 1)
             plt.title('Predict: ' + classes[predictions[index]] + '\n'
@@ -154,7 +161,7 @@ def plot_correct_wrong_predictions(DATASET, dataset_test_loader, predictions, re
     count = 0
     fig = plt.figure(figsize=(20, 20), dpi=900)
     index = 0
-    for img, label in dataset_test_loader:
+    for img, label, _ in dataset_test_loader:
         if (predictions[index] != real_labels[index]):
             plt.subplot(10, 6, count + 1)
             plt.title('Predict: ' + classes[predictions[index]] + '\n'

@@ -3,6 +3,7 @@ import glob
 import bz2, shutil
 from PIL import Image
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def decompress_bz2_dataset():
@@ -48,3 +49,27 @@ def convert_to_jpg_dataset():
 def add_labels(x, y):
     for i in range(len(x)):
         plt.text(i, y[i] + 0.2, "{:.2f}".format(y[i]) + ' %', ha='center')
+
+
+def rgb2gray(rgb):
+    r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
+    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+
+    return gray
+
+
+def create_histograms(image, sub_images_num, bins_per_sub_images):
+    grid = np.arange(0, image.shape[1] + 1, image.shape[1] // sub_images_num)
+
+    sub_image_histograms = []
+    sub_image_bins = []
+
+    for i in range(1, len(grid)):
+        for j in range(1, len(grid)):
+            sub_image = image[grid[i - 1]:grid[i], grid[j - 1]:grid[j]]
+            sub_image_histogram, bins = np.histogram(sub_image, bins=bins_per_sub_images, density=True)
+
+            sub_image_histograms.extend(sub_image_histogram)
+            sub_image_bins.append(sub_image_bins)
+
+    return sub_image_histograms, sub_image_bins

@@ -9,6 +9,9 @@ from torchvision import transforms
 import xmltodict
 import collections
 import src.utils as utils
+from sklearn.decomposition import PCA
+from tqdm.auto import tqdm
+from src.custom.CustomFeretPCADataset import CustomFeretPCADataset
 
 random.seed(777)
 
@@ -32,7 +35,9 @@ def get_dataset(DATASET, train_images_name, test_images_name, classes):
             # transforms.ToTensor(),
             # transforms.Normalize(mean=DATASET['dataset_train_mean'], std=DATASET['dataset_train_std']),
         }),
-        use_cache=DATASET['use_cache']
+        use_cache=DATASET['use_cache'],
+        feature_extraction=DATASET['feature_extraction'],
+        augmentation=DATASET['augmentation']
     )
 
     dataset_test = CustomFeretDataset(
@@ -44,7 +49,8 @@ def get_dataset(DATASET, train_images_name, test_images_name, classes):
             # transforms.ToTensor(),
             # transforms.Normalize(mean=DATASET['dataset_train_mean'], std=DATASET['dataset_train_std']),
         }),
-        use_cache=DATASET['use_cache']
+        use_cache=DATASET['use_cache'],
+        feature_extraction=DATASET['feature_extraction'],
     )
 
     # iterate_dataset(dataset_train)
@@ -283,7 +289,7 @@ def dataset_type_examples(dataset_train_loader, dataset_test_loader, classes):
 
     already = []
     index = 0
-    for images, labels in dataset_train_loader:
+    for images, labels, _ in dataset_train_loader:
         if labels.numpy()[0] not in already:
             ax[index].imshow(images[0].permute(1, 2, 0), cmap='gray')
             ax[index].set_title(classes[labels.numpy()[0]])
@@ -300,7 +306,7 @@ def dataset_type_examples(dataset_train_loader, dataset_test_loader, classes):
 
     already = []
     index = 0
-    for images, labels in dataset_test_loader:
+    for images, labels, _ in dataset_test_loader:
         if labels.numpy()[0] not in already:
             ax[index].imshow(images[0].permute(1, 2, 0), cmap='gray')
             ax[index].set_title(classes[labels.numpy()[0]])
@@ -517,3 +523,132 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
     plt.tight_layout()
     utils.add_labels(data, distr)
     plt.savefig('data/results/dataset/dataset_poses_distribution.jpg', dpi=fig.dpi)
+
+
+def get_features_pca(DATASET, dataset_train, dataset_test, classes):
+    """
+    Get features for pca
+
+    :param DATASET: dataset name
+    :param dataset_train: dataset_train
+    :param dataset_test: dataset_test
+    :param classes: classes
+    :return: features & labels
+    """
+    train_images = []
+    train_labels = []
+    test_images = []
+    test_labels = []
+
+    # images
+    for image, label in tqdm(dataset_train):
+        train_images.append(image.permute(1, 2, 0).numpy())
+        train_labels.append(label)
+
+    for image, label in tqdm(dataset_test):
+        test_images.append(image.permute(1, 2, 0).numpy())
+        test_labels.append(label)
+
+    # flatten
+    train_images_flatten = np.reshape(train_images, (np.shape(train_images)[0], np.shape(train_images)[1] * np.shape(train_images)[2] * np.shape(train_images)[3]))
+    test_images_flatten = np.reshape(test_images, (np.shape(test_images)[0], np.shape(test_images)[1] * np.shape(test_images)[2] * np.shape(test_images)[3]))
+
+    # choose_number_of_components
+    # pca_train = PCA(n_components=len(train_images))  # limitare sklearn n_comp < nr_img !
+    # pca_train.fit(train_images_flatten)
+    #
+    # plt.grid()
+    # plt.plot(np.cumsum(pca_train.explained_variance_ratio_))  # eigenvalues
+    #
+    # plt.axvline(x=np.interp(0.9, np.cumsum(pca_train.explained_variance_ratio_), range(len(train_images))), color='red', linestyle='--')
+    # plt.axhline(y=0.9, color='red', linestyle='--')
+    #
+    # plt.xlabel('Number of components')
+    # plt.ylabel('Explained variance')
+    # plt.savefig('data/results/pca/explained_variance_chart.png', dpi=900)
+    # plt.close()
+    #
+    # print('Components for 0.8 = ', np.interp(0.8, np.cumsum(pca_train.explained_variance_ratio_), range(len(train_images))))
+    # print('Components for 0.85 = ', np.interp(0.85, np.cumsum(pca_train.explained_variance_ratio_), range(len(train_images))))
+    # print('Components for 0.9 = ', np.interp(0.9, np.cumsum(pca_train.explained_variance_ratio_), range(len(train_images))))
+    # print('Components for 0.95 = ', np.interp(0.95, np.cumsum(pca_train.explained_variance_ratio_), range(len(train_images))))
+    # print('Components for 0.99 = ', np.interp(0.99, np.cumsum(pca_train.explained_variance_ratio_), range(len(train_images))))
+
+    # pca
+    pca = PCA(n_components=DATASET['n_components'])
+    pca.fit(train_images_flatten)
+
+    # eigenvectors
+    cols = 10
+    rows = int(DATASET['n_components'] / cols)
+    fig, axes = plt.subplots(rows, cols, figsize=(20, 70),
+                             subplot_kw={'xticks': [], 'yticks': []},
+                             gridspec_kw=dict(hspace=0.1, wspace=0.1), dpi=900)
+
+    for i, ax in enumerate(axes.flat):
+        ax.imshow(utils.rgb2gray(pca.components_[i].reshape([DATASET['size'][0], DATASET['size'][1], 3])), cmap='bone')  # eigenvectors
+        ax.title.set_text('Component ' + str(i))
+    plt.savefig('data/results/pca/eigenvectors.png', dpi=fig.dpi)
+    plt.close()
+
+    # transform
+    images_pca_train_reduced = pca.transform(train_images_flatten)
+    images_pca_train_recovered = pca.inverse_transform(images_pca_train_reduced)
+
+    images_pca_test_reduced = pca.transform(test_images_flatten)
+    images_pca_test_recovered = pca.inverse_transform(images_pca_test_reduced)
+
+    # original and compresed image
+    fig, ax = plt.subplots(2, 10, figsize=(20, 5),
+                           subplot_kw={'xticks': [], 'yticks': []},
+                           gridspec_kw=dict(hspace=0.1, wspace=0.1), dpi=900)
+
+    # print(np.max(images_pca_train_recovered[1,:].astype("uint8")))
+    # print(np.min(images_pca_train_recovered[1,:].astype("uint8")))
+    for i in range(0, 10):
+        ax[0, i].imshow(train_images_flatten[i].reshape([DATASET['size'][0], DATASET['size'][1], 3]), cmap='gray')
+
+        image_pca_train = images_pca_train_recovered[i, :].reshape([DATASET['size'][0], DATASET['size'][1], 3])
+        ax[1, i].imshow(image_pca_train, cmap='gray')
+
+    ax[0, 0].set_ylabel('original')
+    ax[1, 0].set_ylabel('reconstruction')
+    plt.savefig('data/results/pca/image_pca_' + str(DATASET['n_components']) + '.png', dpi=fig.dpi)
+    plt.close()
+
+    # pca components
+    plt.figure(figsize=(10, 6), dpi=900)
+    plt.style.use('seaborn-whitegrid')
+    c_map = plt.cm.get_cmap('jet', len(classes))
+    scatter = plt.scatter(images_pca_train_reduced[:, 0], images_pca_train_reduced[:, 1], s=15,
+                          cmap=c_map, c=train_labels)
+    plt.colorbar(scatter, ticks=range(len(classes)), label='Class ID')
+    plt.xlabel('PC-1'), plt.ylabel('PC-2')
+    # plt.show()
+    plt.savefig('data/results/pca/pc12.png', dpi=fig.dpi)
+    plt.close()
+    plt.style.use('default')
+
+    return images_pca_train_reduced, train_labels, images_pca_test_reduced, test_labels, test_images
+
+
+def get_dataset_loader_mlp(dataset, DATASET, type_dataset):
+    """
+        Get dataset loader
+
+        :param dataset: dataset obj
+        :param DATASET: info
+        :param type_dataset: dataset loader type
+        :return: dataset loader object
+        """
+
+    dataset_loader = DataLoader(
+        dataset,
+        batch_size=DATASET['data_loader_train' if type_dataset == 0 else 'data_loader_test']['batch_size'],
+        shuffle=DATASET['data_loader_train' if type_dataset == 0 else 'data_loader_test']['shuffle'],
+        num_workers=DATASET['data_loader_train' if type_dataset == 0 else 'data_loader_test']['num_workers']
+    )
+
+    # check_dataset_loader(dataset_loader)
+
+    return dataset_loader

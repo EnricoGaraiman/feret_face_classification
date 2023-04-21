@@ -71,11 +71,10 @@ def plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classe
 
     # # plot only a part of CM
     predictions_copy = predictions.copy()
-    if len(classes) > 40:
-        top_classes = [label[0] for label in Counter(real_labels).most_common()[:40]] + ["_other"]
-        labels = [label if label in top_classes else "_other" for label in real_labels]
-        predictions = [pred if pred in top_classes else "_other" for pred in predictions]
-        classes = [classes[index] for index in top_classes if index != '_other'] + ['_other']
+    if len(classes) > 50:
+        labels = [label for label in real_labels if label in range(0, 50)]
+        predictions = [pred for pred in predictions if pred in range(0, 50)]
+        classes = classes[0: 50]
 
     cmx = confusion_matrix(labels, predictions, normalize='true')
     disp = ConfusionMatrixDisplay(confusion_matrix=cmx, display_labels=classes)

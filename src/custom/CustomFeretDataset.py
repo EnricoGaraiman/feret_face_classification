@@ -7,8 +7,6 @@ import torchvision
 from skimage.feature import hog, local_binary_pattern
 import numpy as np
 import src.utils as utils
-import numpy as np
-
 
 class CustomFeretDataset(Dataset):
     def __init__(self, data_dir, images_names, classes, transform=None, use_cache=False, feature_extraction=None, augmentation=False):
@@ -56,7 +54,7 @@ class CustomFeretDataset(Dataset):
                     # # print(np.shape(features), np.shape(bins))
                     # # print('da')
                     #
-                    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), dpi=900)
+                    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), dpi=300)
                     # axes[0].imshow(image.permute(1, 2, 0).numpy(), cmap="gray")
                     # axes[1].hist(range(0, 16*9), 16*9, weights=features)
                     # fig.tight_layout()
@@ -66,12 +64,12 @@ class CustomFeretDataset(Dataset):
                     # image = utils.rgb2gray(image.permute(1, 2, 0).numpy())
                     # features = np.reshape(image, (np.shape(image)[0] * np.shape(image)[1]))
 
-                    features, hog_image = hog(image.permute(1, 2, 0).numpy(), orientations=8, pixels_per_cell=(8, 8),
-                                              cells_per_block=(2, 2), visualize=True, channel_axis=-1, block_norm='L2-Hys', transform_sqrt=True)
+                    features = hog(image.permute(1, 2, 0).numpy(), orientations=8, pixels_per_cell=(12, 12),
+                                              cells_per_block=(2, 2), visualize=False, channel_axis=-1, block_norm='L2-Hys', transform_sqrt=True)
                     # print(np.min(features), np.max(features))
                     # print(np.shape(features))
                     #
-                    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), dpi=900)
+                    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), dpi=300)
                     # axes[0].imshow(image.permute(1, 2, 0).numpy(), cmap="gray")
                     # axes[1].imshow(hog_image, cmap="gray")
                     # fig.tight_layout()
@@ -90,7 +88,7 @@ class CustomFeretDataset(Dataset):
                 image = self.augmentation_transform(image)
 
                 # # example augmentation
-                # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), dpi=900)
+                # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), dpi=300)
                 # axes[0].imshow(image_copy, cmap="gray")
                 # axes[1].imshow(image.permute(1, 2, 0).numpy(), cmap="gray")
                 # fig.tight_layout()

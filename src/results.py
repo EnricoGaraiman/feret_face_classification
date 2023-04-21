@@ -27,7 +27,7 @@ def plot_training_results(DATASET, train_loss_history, train_acc_history, test_l
     # plt.hlines(y=np.min(test_loss_history), color='red', zorder=1, xmin=0, xmax=len(test_loss_history) - 1)
     # plt.vlines(x=test_loss_history.index(np.min(test_loss_history)), color='red', zorder=2, ymin=1, ymax=np.max(test_loss_history))
     plt.tight_layout()
-    plt.savefig('data/results/training/loss_results_' + DATASET['model'] + '_' + str(DATASET['epochs']) + '.jpg', dpi=900)
+    plt.savefig('data/results/training/loss_results_' + DATASET['model'] + '_' + str(DATASET['epochs']) + '.jpg', dpi=300)
 
     plt.figure()
     plt.plot(range(1, len(train_acc_history) + 1), train_acc_history, label='Train accuracy', color='brown')
@@ -40,7 +40,7 @@ def plot_training_results(DATASET, train_loss_history, train_acc_history, test_l
     # plt.hlines(y=np.max(test_acc_history), color='red', zorder=1, xmin=0, xmax=len(test_acc_history) - 1 )
     # plt.vlines(x=test_acc_history.index(np.max(test_acc_history)), color='red', zorder=2, ymin=1, ymax=np.max(test_acc_history))
     plt.tight_layout()
-    plt.savefig('data/results/training/accuracy_results_' + DATASET['model'] + '_' + str(DATASET['epochs']) + '.jpg', dpi=900)
+    plt.savefig('data/results/training/accuracy_results_' + DATASET['model'] + '_' + str(DATASET['epochs']) + '.jpg', dpi=300)
 
 
 def plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classes, best_model):
@@ -80,7 +80,7 @@ def plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classe
     cmx = confusion_matrix(labels, predictions, normalize='true')
     disp = ConfusionMatrixDisplay(confusion_matrix=cmx, display_labels=classes)
 
-    fig, ax = plt.subplots(figsize=(15, 15), dpi=900)
+    fig, ax = plt.subplots(figsize=(15, 15), dpi=300)
     fig.suptitle('Confusion Matrix | ' + DATASET['model'] + ' | ' + DATASET['name'], fontsize=20)
     plt.xlabel('True label', fontsize=16)
     plt.ylabel('Predicted label', fontsize=16)
@@ -139,7 +139,7 @@ def plot_correct_wrong_predictions(DATASET, dataset_test_loader, predictions, re
     """
     # correct
     count = 0
-    fig = plt.figure(figsize=(20, 20), dpi=900)
+    fig = plt.figure(figsize=(20, 20), dpi=300)
     index = 0
     for img, label, _ in dataset_test_loader:
         if (predictions[index] == real_labels[index]):
@@ -159,7 +159,7 @@ def plot_correct_wrong_predictions(DATASET, dataset_test_loader, predictions, re
 
     # wrong
     count = 0
-    fig = plt.figure(figsize=(20, 20), dpi=900)
+    fig = plt.figure(figsize=(20, 20), dpi=300)
     index = 0
     for img, label, _ in dataset_test_loader:
         if (predictions[index] != real_labels[index]):

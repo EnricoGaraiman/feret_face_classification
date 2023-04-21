@@ -48,7 +48,7 @@ def convert_to_jpg_dataset():
 
 def add_labels(x, y):
     for i in range(len(x)):
-        plt.text(i, y[i] + 0.2, "{:.2f}".format(y[i]) + ' %', ha='center')
+        plt.text(i, y[i] + 0.2, "{:.2f}".format(y[i]) + ' %', ha='center', fontsize=16)
 
 
 def rgb2gray(rgb):

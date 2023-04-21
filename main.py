@@ -14,7 +14,7 @@ DATASET = {
     'split_factor': 0.8,  # 0.8 for 70/30, 0.875 for 80/20, 0.95 for 90/10
     'split_factor_sub': 7,  # 7 for 70/30, 7 for 80/20, 5 for 90/10
     'subjects_percent': None,
-    'size': [198, 128],  # 768, 512 orig | 384, 256 | 198, 128
+    'size': [384, 256],  # 768, 512 orig | 384, 256 | 198, 128
     'data_loader_train': {
         'batch_size': 10,
         'num_workers': 0,
@@ -26,18 +26,8 @@ DATASET = {
         'shuffle': False,
     },
     'model': 'mlp',  # mlp, resnet18, resnet34, ...
-    # 'mlp_layers_input': {
-    #     'input': 8100,
-    #     'hidden1': 3600,
-    #     'hidden2': 3600,
-    #     'hidden3': 2400,
-    #     'hidden4': 2400,
-    #     'hidden5': 1600,
-    #     'hidden6': 1600,
-    #     'output': 1600,
-    # },
     'mlp_layers_input': {
-        'input': 11040,
+        'input': 19840, #11040 for 198, 128
         'hidden1': 7000,
         'hidden2': 6000,
         'hidden3': 5000,
@@ -69,13 +59,6 @@ if __name__ == '__main__':
         print('Test [%]', len(test_images_name), len(test_images_name) / (len(train_images_name) + len(test_images_name)) * 100)
         dataset_train, dataset_test = dataset_file.get_dataset(DATASET, train_images_name, test_images_name, classes)
 
-        # dataset visualisation
-        # dataset_file.plot_dataset_visualisation(DATASET, dataset_train_loader, dataset_test_loader, classes)
-
-        # dataset train mean & std
-        # mean, std = dataset_file.dataset_mean_and_std(dataset_train_loader)
-        # print(mean, std)
-
         if DATASET['model'] == 'mlp':
             # dataset loaders
             dataset_train_loader = dataset_file.get_dataset_loader_mlp(dataset_train, DATASET, 0)
@@ -86,6 +69,13 @@ if __name__ == '__main__':
             # dataset loaders
             dataset_train_loader = dataset_file.get_dataset_loader(dataset_train, DATASET, 0)
             dataset_test_loader = dataset_file.get_dataset_loader(dataset_test, DATASET, 1)
+
+            # dataset visualisation
+            # dataset_file.plot_dataset_visualisation(DATASET, dataset_train_loader, dataset_test_loader, classes)
+
+            # dataset train mean & std
+            # mean, std = dataset_file.dataset_mean_and_std(dataset_train_loader)
+            # print(mean, std)
 
             # training stage
             train_loss_history, train_acc_history, test_loss_history, test_acc_history, best_model = train_file.training_stage(DATASET, dataset_train_loader, dataset_test_loader)

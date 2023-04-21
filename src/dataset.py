@@ -207,6 +207,7 @@ def plot_dataset_visualisation(DATASET, dataset_train_loader, dataset_test_loade
     dataset_others_distribution(DATASET, subjects_info, recordings_info)
     dataset_type_examples(dataset_train_loader, dataset_test_loader, classes)
 
+    print('Dataset visualisation done!')
 
 def get_subjects_information(DATASET):
     """
@@ -255,19 +256,19 @@ def dataset_distribution(DATASET):
             dataset_distr.append(0)
             dataset_classes.append(int(dataset_classes[-1]) + 1)
 
-        if i % 20 == 0:
+        if i % 40 == 0:
             x_ticks.append(i)
             x_labels.append(dir.split('\\')[-1])
 
-    fig = plt.figure(figsize=(30, 10), dpi=900)
+    fig = plt.figure(figsize=(20, 10), dpi=300)
     plt.bar(dataset_classes, dataset_distr, color='maroon')
-    plt.xlabel("Dataset class (subject ID)", fontsize=12)
-    plt.ylabel("No. of images", fontsize=12)
-    plt.title('Dataset distribution' + ' | ' + DATASET['name'], fontsize=18)
+    plt.xlabel("Dataset class (subject ID)", fontsize=32)
+    plt.ylabel("No. of images", fontsize=32)
+    plt.title('Dataset distribution' + ' | ' + DATASET['name'], fontsize=42)
     plt.margins(0)
     ax = plt.gca()
     ax.set_xticks(x_ticks)
-    ax.set_xticklabels(x_labels, rotation=30, fontsize=8, horizontalalignment='right')
+    ax.set_xticklabels(x_labels, rotation=30, fontsize=16, horizontalalignment='right')
     plt.tight_layout()
     plt.savefig('data/results/dataset/dataset_distribution.jpg', dpi=fig.dpi)
     # plt.show()
@@ -284,7 +285,7 @@ def dataset_type_examples(dataset_train_loader, dataset_test_loader, classes):
     :param dataset_test_loader: dataset_test_loader
     :param classes: classes
     """
-    fig, ax = plt.subplots(nrows=10, ncols=10, figsize=(15, 15), dpi=900)
+    fig, ax = plt.subplots(nrows=10, ncols=10, figsize=(15, 15), dpi=300)
     ax = ax.flatten()
 
     already = []
@@ -301,7 +302,7 @@ def dataset_type_examples(dataset_train_loader, dataset_test_loader, classes):
     plt.tight_layout()
     fig.savefig('data/results/dataset/training_data_visualisation.jpg', dpi=fig.dpi)
 
-    fig, ax = plt.subplots(nrows=10, ncols=10, figsize=(15, 15), dpi=900)
+    fig, ax = plt.subplots(nrows=10, ncols=10, figsize=(15, 15), dpi=300)
     ax = ax.flatten()
 
     already = []
@@ -359,10 +360,10 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
 
     distr = distr / np.sum(distr) * 100
 
-    fig = plt.figure(figsize=(10, 10), dpi=900)
+    fig = plt.figure(figsize=(10, 10), dpi=300)
     plt.bar(data, distr, color='darkgreen', width=0.5)
-    plt.xlabel("Gender", fontsize=14)
-    plt.ylabel("Subjects percent [%]", fontsize=14)
+    plt.xlabel("Gender", fontsize=16)
+    plt.ylabel("Subjects percent [%]", fontsize=16)
     plt.title('Dataset gender distribution' + ' | ' + DATASET['name'], fontsize=20)
     ax = plt.gca()
     ax.tick_params(axis='both', labelsize=14)
@@ -380,14 +381,14 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
 
     distr = distr / np.sum(distr) * 100
 
-    fig = plt.figure(figsize=(10, 10), dpi=900)
+    fig = plt.figure(figsize=(10, 10), dpi=300)
     plt.bar(data, distr, color='darkorange', width=0.5)
-    plt.xlabel("Race", fontsize=14)
-    plt.ylabel("Subjects percent [%]", fontsize=14)
+    plt.xlabel("Race", fontsize=16)
+    plt.ylabel("Subjects percent [%]", fontsize=16)
     plt.title('Dataset race distribution' + ' | ' + DATASET['name'], fontsize=20)
     ax = plt.gca()
     ax.set_xticks(data)
-    ax.set_xticklabels(data, rotation=45, ha='right', rotation_mode='anchor')
+    ax.set_xticklabels(data, rotation=45, fontsize=16, ha='right', rotation_mode='anchor')
     ax.tick_params(axis='y', labelsize=14)
     plt.tight_layout()
     utils.add_labels(data, distr)
@@ -403,14 +404,14 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
 
     distr = distr / np.sum(distr) * 100
 
-    fig = plt.figure(figsize=(10, 10), dpi=900)
+    fig = plt.figure(figsize=(10, 10), dpi=300)
     plt.bar(data, distr, color='dodgerblue', width=0.5)
-    plt.xlabel("Year of born", fontsize=14)
-    plt.ylabel("Subjects percent [%]", fontsize=14)
+    plt.xlabel("Year of born", fontsize=16)
+    plt.ylabel("Subjects percent [%]", fontsize=16)
     plt.title('Dataset YOB distribution' + ' | ' + DATASET['name'], fontsize=20)
     ax = plt.gca()
     ax.set_xticks(data)
-    ax.set_xticklabels(data, rotation=45, ha='right', rotation_mode='anchor')
+    ax.set_xticklabels(data, rotation=45, fontsize=16, ha='right', rotation_mode='anchor')
     ax.tick_params(axis='y', labelsize=14)
     plt.tight_layout()
     utils.add_labels(data, distr)
@@ -426,10 +427,10 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
 
     distr = distr / np.sum(distr) * 100
 
-    fig = plt.figure(figsize=(10, 10), dpi=900)
+    fig = plt.figure(figsize=(10, 10), dpi=300)
     plt.bar(data, distr, color='brown', width=0.5)
-    plt.xlabel("Mustache", fontsize=14)
-    plt.ylabel("Images percent [%]", fontsize=14)
+    plt.xlabel("Mustache", fontsize=16)
+    plt.ylabel("Images percent [%]", fontsize=16)
     plt.title('Dataset mustache distribution' + ' | ' + DATASET['name'], fontsize=20)
     ax = plt.gca()
     ax.set_xticks(data)
@@ -448,10 +449,10 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
 
     distr = distr / np.sum(distr) * 100
 
-    fig = plt.figure(figsize=(10, 10), dpi=900)
+    fig = plt.figure(figsize=(10, 10), dpi=300)
     plt.bar(data, distr, color='royalblue', width=0.5)
-    plt.xlabel("Glasses", fontsize=14)
-    plt.ylabel("Images percent [%]", fontsize=14)
+    plt.xlabel("Glasses", fontsize=16)
+    plt.ylabel("Images percent [%]", fontsize=16)
     plt.title('Dataset glasses distribution' + ' | ' + DATASET['name'], fontsize=20)
     ax = plt.gca()
     ax.set_xticks(data)
@@ -470,10 +471,10 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
 
     distr = distr / np.sum(distr) * 100
 
-    fig = plt.figure(figsize=(10, 10), dpi=900)
+    fig = plt.figure(figsize=(10, 10), dpi=300)
     plt.bar(data, distr, color='indianred', width=0.5)
-    plt.xlabel("Beard", fontsize=14)
-    plt.ylabel("Images percent [%]", fontsize=14)
+    plt.xlabel("Beard", fontsize=16)
+    plt.ylabel("Images percent [%]", fontsize=16)
     plt.title('Dataset beard distribution' + ' | ' + DATASET['name'], fontsize=20)
     ax = plt.gca()
     ax.set_xticks(data)
@@ -512,10 +513,10 @@ def dataset_others_distribution(DATASET, subjects_info, recordings_info):
     data = [data_labels[d] for d in data]
     distr = distr / np.sum(distr) * 100
 
-    fig = plt.figure(figsize=(10, 10), dpi=900)
+    fig = plt.figure(figsize=(10, 10), dpi=300)
     plt.bar(data, distr, color='darkviolet', width=0.5)
-    plt.xlabel("Poses", fontsize=14)
-    plt.ylabel("Images percent [%]", fontsize=14)
+    plt.xlabel("Poses", fontsize=16)
+    plt.ylabel("Images percent [%]", fontsize=16)
     plt.title('Dataset poses distribution' + ' | ' + DATASET['name'], fontsize=20)
     ax = plt.gca()
     ax.set_xticks(data)
@@ -565,7 +566,7 @@ def get_features_pca(DATASET, dataset_train, dataset_test, classes):
     #
     # plt.xlabel('Number of components')
     # plt.ylabel('Explained variance')
-    # plt.savefig('data/results/pca/explained_variance_chart.png', dpi=900)
+    # plt.savefig('data/results/pca/explained_variance_chart.png', dpi=300)
     # plt.close()
     #
     # print('Components for 0.8 = ', np.interp(0.8, np.cumsum(pca_train.explained_variance_ratio_), range(len(train_images))))
@@ -583,7 +584,7 @@ def get_features_pca(DATASET, dataset_train, dataset_test, classes):
     rows = int(DATASET['n_components'] / cols)
     fig, axes = plt.subplots(rows, cols, figsize=(20, 70),
                              subplot_kw={'xticks': [], 'yticks': []},
-                             gridspec_kw=dict(hspace=0.1, wspace=0.1), dpi=900)
+                             gridspec_kw=dict(hspace=0.1, wspace=0.1), dpi=300)
 
     for i, ax in enumerate(axes.flat):
         ax.imshow(utils.rgb2gray(pca.components_[i].reshape([DATASET['size'][0], DATASET['size'][1], 3])), cmap='bone')  # eigenvectors
@@ -601,7 +602,7 @@ def get_features_pca(DATASET, dataset_train, dataset_test, classes):
     # original and compresed image
     fig, ax = plt.subplots(2, 10, figsize=(20, 5),
                            subplot_kw={'xticks': [], 'yticks': []},
-                           gridspec_kw=dict(hspace=0.1, wspace=0.1), dpi=900)
+                           gridspec_kw=dict(hspace=0.1, wspace=0.1), dpi=300)
 
     # print(np.max(images_pca_train_recovered[1,:].astype("uint8")))
     # print(np.min(images_pca_train_recovered[1,:].astype("uint8")))
@@ -617,7 +618,7 @@ def get_features_pca(DATASET, dataset_train, dataset_test, classes):
     plt.close()
 
     # pca components
-    plt.figure(figsize=(10, 6), dpi=900)
+    plt.figure(figsize=(10, 6), dpi=300)
     plt.style.use('seaborn-whitegrid')
     c_map = plt.cm.get_cmap('jet', len(classes))
     scatter = plt.scatter(images_pca_train_reduced[:, 0], images_pca_train_reduced[:, 1], s=15,

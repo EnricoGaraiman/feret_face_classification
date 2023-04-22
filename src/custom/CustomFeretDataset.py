@@ -64,7 +64,7 @@ class CustomFeretDataset(Dataset):
                     # image = utils.rgb2gray(image.permute(1, 2, 0).numpy())
                     # features = np.reshape(image, (np.shape(image)[0] * np.shape(image)[1]))
 
-                    features = hog(image.permute(1, 2, 0).numpy(), orientations=8, pixels_per_cell=(12, 12),
+                    features = hog(image.permute(1, 2, 0).numpy(), orientations=8, pixels_per_cell=(8, 8),
                                               cells_per_block=(2, 2), visualize=False, channel_axis=-1, block_norm='L2-Hys', transform_sqrt=True)
                     # print(np.min(features), np.max(features))
                     # print(np.shape(features))

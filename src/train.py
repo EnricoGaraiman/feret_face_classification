@@ -173,18 +173,18 @@ def create_mlp_model(DATASET, classes_number):
     model = nn.Sequential(
         nn.Linear(DATASET['mlp_layers_input']['input'], DATASET['mlp_layers_input']['hidden1']),  # input layer
         nn.ReLU(),
-        nn.Linear(DATASET['mlp_layers_input']['hidden1'], DATASET['mlp_layers_input']['output']),
+        nn.Linear(DATASET['mlp_layers_input']['hidden1'], DATASET['mlp_layers_input']['hidden2']),
         nn.ReLU(),
-        # nn.Linear(DATASET['mlp_layers_input']['hidden2'], DATASET['mlp_layers_input']['hidden3']),
-        # nn.ReLU(),
-        # nn.Linear(DATASET['mlp_layers_input']['hidden3'], DATASET['mlp_layers_input']['hidden4']),
-        # nn.ReLU(),
-        # nn.Linear(DATASET['mlp_layers_input']['hidden4'], DATASET['mlp_layers_input']['hidden5']),
-        # nn.ReLU(),
-        # nn.Linear(DATASET['mlp_layers_input']['hidden5'], DATASET['mlp_layers_input']['hidden6']),
-        # nn.ReLU(),
-        # nn.Linear(DATASET['mlp_layers_input']['hidden6'], DATASET['mlp_layers_input']['output']),
-        # nn.ReLU(),
+        nn.Linear(DATASET['mlp_layers_input']['hidden2'], DATASET['mlp_layers_input']['hidden3']),
+        nn.ReLU(),
+        nn.Linear(DATASET['mlp_layers_input']['hidden3'], DATASET['mlp_layers_input']['hidden4']),
+        nn.ReLU(),
+        nn.Linear(DATASET['mlp_layers_input']['hidden4'], DATASET['mlp_layers_input']['hidden5']),
+        nn.ReLU(),
+        nn.Linear(DATASET['mlp_layers_input']['hidden5'], DATASET['mlp_layers_input']['hidden6']),
+        nn.ReLU(),
+        nn.Linear(DATASET['mlp_layers_input']['hidden6'], DATASET['mlp_layers_input']['output']),
+        nn.ReLU(),
         nn.Linear(DATASET['mlp_layers_input']['output'], classes_number),  # output layer
         nn.Sigmoid()
     )

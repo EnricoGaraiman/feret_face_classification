@@ -70,13 +70,13 @@ def plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classe
     print(f"Test dataset results: \n Accuracy: {test_accuracy :>0.2f}%\n")
 
     # # plot only a part of CM
-    predictions_copy = predictions.copy()
-    if len(classes) > 50:
-        labels = [label for label in real_labels if label in range(0, 50)]
-        predictions = [pred for pred in predictions if pred in range(0, 50)]
-        classes = classes[0: 50]
+    # predictions_copy = predictions.copy()
+    # if len(classes) > 50:
+    #     labels = [label for label in real_labels if label in range(0, 50)]
+    #     predictions = [pred for pred in predictions if pred in range(0, 50)]
+    #     classes = classes[0: 50]
 
-    cmx = confusion_matrix(labels, predictions, normalize='true')
+    cmx = confusion_matrix(labels, predictions, labels=classes[0: 50] if len(classes) > 50 else classes, normalize=True)
     disp = ConfusionMatrixDisplay(confusion_matrix=cmx, display_labels=classes)
 
     fig, ax = plt.subplots(figsize=(15, 15), dpi=300)
@@ -86,7 +86,7 @@ def plot_confusion_matrix(DATASET, dataset_test_loader, test_images_name, classe
     disp.plot(ax=ax, xticks_rotation=45, colorbar=False)
     plt.savefig('data/results/training/confusion-matrix_' + DATASET['model'] + '_' + str(DATASET['epochs']) + '.png', dpi=fig.dpi)
 
-    return predictions_copy, real_labels
+    return predictions, real_labels
 
 
 def get_test_predictions(dataloader, model, DATASET):

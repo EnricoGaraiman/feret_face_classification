@@ -11,10 +11,10 @@ DATASET = {
     'ground_truths_dir': 'data/colorferet/converted_images/ground_truths',
     'subjects_info': 'data/colorferet/converted_images/ground_truths/xml/subjects.xml',
     'recordings_info': 'data/colorferet/converted_images/ground_truths/xml/recordings.xml',
-    'split_factor': 0.8,  # 0.8 for 70/30, 0.875 for 80/20, 0.95 for 90/10
-    'split_factor_sub': 7,  # 7 for 70/30, 7 for 80/20, 5 for 90/10
+    'split_factor': 0.95,  # 0.8 for 70/30, 0.875 for 80/20, 0.95 for 90/10
+    'split_factor_sub': 5,  # 7 for 70/30, 7 for 80/20, 5 for 90/10
     'subjects_percent': None,
-    'size': [198, 128],  # 768, 512 orig | 384, 256 | 198, 128
+    'size': [384, 256],  # 768, 512 orig | 384, 256 | 198, 128
     'data_loader_train': {
         'batch_size': 10,
         'num_workers': 0,
@@ -27,7 +27,7 @@ DATASET = {
     },
     'model': 'mlp',  # mlp, resnet18, resnet34, ...
     'mlp_layers_input': {
-        'input': 11040, #11040 for 198, 128
+        'input': 19840, #11040 for 198x128, 19840for 384x256
         'hidden1': 7000,
         'hidden2': 6000,
         'hidden3': 5000,
